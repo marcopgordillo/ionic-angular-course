@@ -25,11 +25,9 @@ export class RecipesService {
     return [...this._recipes]; // return a copy of array
   }
 
-  getRecipe(recipeId: string): Recipe {
-    return {...this._recipes.find(recipe => {
-      return recipe.id === recipeId;
-    })};
-  }
-
   constructor() { }
+
+  getRecipe(recipeId: string): Recipe {
+    return {...this._recipes.find(recipe => recipe.id === recipeId)};
+  }
 }
