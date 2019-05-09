@@ -30,4 +30,8 @@ export class RecipesService {
   getRecipe(recipeId: string): Recipe {
     return {...this._recipes.find(recipe => recipe.id === recipeId)};
   }
+
+  deleteRecipe(recipeId: string): void {
+    this._recipes = this._recipes.filter(recipe => recipe.id !== recipeId);
+  }
 }
