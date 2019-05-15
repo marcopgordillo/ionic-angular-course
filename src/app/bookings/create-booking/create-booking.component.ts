@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
+import { Place } from '../../places/place.model';
 
 @Component({
   selector: 'app-create-booking',
@@ -6,6 +7,9 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./create-booking.component.scss'],
 })
 export class CreateBookingComponent implements OnInit {
+
+  @Input()
+  selectedPlace: Place;
 
   constructor() { }
 
