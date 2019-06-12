@@ -28,7 +28,7 @@ export class PlaceDetailPage implements OnInit {
       }
 
       this.place = this.placesService.getPlace(paramMap.get('placeId'));
-    })
+    });
   }
 
   onBookPlace() {
@@ -52,7 +52,7 @@ export class PlaceDetailPage implements OnInit {
     this.modalCtrl
         .create({
           component: CreateBookingComponent,
-          componentProps: {selectedPlace: this.place},
+          componentProps: {selectedPlace: this.place, selectedMode: mode},
         })
         .then(modalEl => {
           modalEl.present();
