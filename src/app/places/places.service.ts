@@ -3,11 +3,15 @@ import {Place} from './place.model';
 import {AuthService} from '../auth/auth.service';
 import {BehaviorSubject} from 'rxjs';
 import {delay, map, take, tap} from 'rxjs/operators';
+import {HttpClient} from '@angular/common/http';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PlacesService {
+
+  private API_URL = environment.apiUrl;
 
   private _places = new BehaviorSubject<Place[]>([
     new Place('p1', 'Manhattan Mansion', 'In the heart of New York City.', 'https://imgs.6sqft.com/wp-content/uploads/2014/06/21042533/Carnegie-Mansion-nyc.jpg', 149.99, new Date('2019-01-01'), new Date('2019-12-31'), 'xyz'),
@@ -19,7 +23,8 @@ export class PlacesService {
     return this._places.asObservable();
   }
 
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService,
+              private http: HttpClient) { }
 
   getPlace(id: string) {
     return this.places.pipe(take(1), map(places => {
@@ -38,12 +43,18 @@ export class PlacesService {
         dateTo,
         this.authService.userId);
 
-    return this.places.pipe(
+    return this.http
+        .post(this.API_URL + '/offered-places.json', { ...newPlace, id: null })
+        .pipe(tap(resData => {
+          console.log(resData);
+        }));
+
+    /*return this.places.pipe(
         take(1),
         delay(1000),
         tap(places => {
           this._places.next(places.concat(newPlace));
-    }));
+    }));*/
   }
 
   updatePlace(placeId, title: string, description: string) {
