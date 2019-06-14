@@ -9,7 +9,7 @@ import {environment} from '../../../environments/environment';
 })
 export class MapModalComponent implements OnInit, AfterViewInit {
 
-  private GOOGLE_API_KEY = environment.googleApiKey;
+  private GOOGLE_API_KEY = environment.googleMapsAPIKey;
 
   @ViewChild('map')
   mapElementRef: ElementRef;
