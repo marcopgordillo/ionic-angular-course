@@ -14,8 +14,10 @@ import {Subscription} from 'rxjs';
 export class EditOfferPage implements OnInit, OnDestroy {
 
   place: Place;
+  placeId: string;
   form: FormGroup;
   placeSub: Subscription;
+  isLoading = false;
 
   constructor(private route: ActivatedRoute,
               private placesService: PlacesService,
@@ -30,18 +32,21 @@ export class EditOfferPage implements OnInit, OnDestroy {
         return;
       }
 
-      this.placeSub = this.placesService.getPlace(paramMap.get('placeId')).subscribe(place => {
+      this.placeId = paramMap.get('placeId');
+      this.isLoading = true;
+      this.placeSub = this.placesService.getPlace(this.placeId).subscribe(place => {
         this.place = place;
-      });
-      this.form = new FormGroup({
-        title: new FormControl(this.place.title, {
-          updateOn: 'blur',
-          validators: [Validators.required]
-        }),
-        description: new FormControl(this.place.description, {
-          updateOn: 'blur',
-          validators: [Validators.required, Validators.maxLength(180)]
-        })
+        this.form = new FormGroup({
+          title: new FormControl(this.place.title, {
+            updateOn: 'blur',
+            validators: [Validators.required]
+          }),
+          description: new FormControl(this.place.description, {
+            updateOn: 'blur',
+            validators: [Validators.required, Validators.maxLength(180)]
+          })
+        });
+        this.isLoading = false;
       });
     });
 
