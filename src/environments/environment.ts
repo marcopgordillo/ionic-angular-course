@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'https://ionic-angular-course-mg.firebaseio.com'
+  apiUrl: 'https://ionic-angular-course-mg.firebaseio.com',
+  googleApiKey: 'AIzaSyCQhSifuT4VMceuOlmgNAcICsqcamj-who'
 };
 
 /*
