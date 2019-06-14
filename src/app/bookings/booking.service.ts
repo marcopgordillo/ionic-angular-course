@@ -2,17 +2,21 @@ import {Injectable} from '@angular/core';
 import {Booking} from './booking.model';
 import {BehaviorSubject} from 'rxjs';
 import {AuthService} from '../auth/auth.service';
-import {delay, take, tap} from 'rxjs/operators';
+import {delay, switchMap, take, tap} from 'rxjs/operators';
+import {HttpClient} from '@angular/common/http';
+import {environment} from '../../environments/environment';
 
 @Injectable({ providedIn: 'root'})
 export class BookingService {
+  private API_URL: string = environment.apiUrl;
   private _bookings = new BehaviorSubject<Booking[]>([]);
 
   get bookings() {
     return this._bookings.asObservable();
   }
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService,
+              private http: HttpClient) {}
 
   addBooking(
       placeId: string,
@@ -24,6 +28,7 @@ export class BookingService {
       dateFrom: Date,
       dateTo: Date
   ) {
+    let generatedId: string;
     const newBooking = new Booking(
         Math.random().toString(),
         placeId,
@@ -36,12 +41,19 @@ export class BookingService {
         dateFrom,
         dateTo);
 
-    return this.bookings.pipe(
-        take(1),
-        delay(1000),
-        tap(bookings => {
+    return this.http
+        .post<{name: string}>(`${this.API_URL}/bookings.json`, {...newBooking, id: null})
+        .pipe(
+            switchMap(resData => {
+              generatedId = resData.name;
+              return this.bookings;
+            }),
+            take(1),
+            tap(bookings => {
+              newBooking.id = generatedId;
               this._bookings.next(bookings.concat(newBooking));
-    }));
+            })
+        );
   }
 
   cancelBooking(bookingId: string) {
