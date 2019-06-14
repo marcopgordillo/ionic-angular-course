@@ -6,18 +6,28 @@ import {delay, map, switchMap, take, tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 
+interface PlaceData {
+  availableFrom: string;
+  availableTo: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  title: string;
+  userId: string;
+}
+
+/*new Place('p1', 'Manhattan Mansion', 'In the heart of New York City.', 'https://imgs.6sqft.com/wp-content/uploads/2014/06/21042533/Carnegie-Mansion-nyc.jpg', 149.99, new Date('2019-01-01'), new Date('2019-12-31'), 'xyz'),
+    new Place('p2', 'Amour Toujours', 'Romantic place in Paris.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/LuxembourgMontparnasse.JPG/1024px-LuxembourgMontparnasse.JPG', 189.99, new Date('2019-01-01'), new Date('2019-12-31'), 'abc'),
+    new Place('p3', 'The Foggy Palace', 'Not your average city trip!', 'http://traveljapanblog.com/ashland/wp-content/uploads/2012/11/12N_1035-RAW-palace-of-the-fine-arts-san-francisco-night1.jpg', 99.99, new Date('2019-01-01'), new Date('2019-12-31'), 'abc')*/
+
 @Injectable({
   providedIn: 'root'
 })
 export class PlacesService {
 
-  private API_URL = environment.apiUrl;
+  private API_URL: string = environment.apiUrl;
 
-  private _places = new BehaviorSubject<Place[]>([
-    new Place('p1', 'Manhattan Mansion', 'In the heart of New York City.', 'https://imgs.6sqft.com/wp-content/uploads/2014/06/21042533/Carnegie-Mansion-nyc.jpg', 149.99, new Date('2019-01-01'), new Date('2019-12-31'), 'xyz'),
-    new Place('p2', 'Amour Toujours', 'Romantic place in Paris.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/LuxembourgMontparnasse.JPG/1024px-LuxembourgMontparnasse.JPG', 189.99, new Date('2019-01-01'), new Date('2019-12-31'), 'abc'),
-    new Place('p3', 'The Foggy Palace', 'Not your average city trip!', 'http://traveljapanblog.com/ashland/wp-content/uploads/2012/11/12N_1035-RAW-palace-of-the-fine-arts-san-francisco-night1.jpg', 99.99, new Date('2019-01-01'), new Date('2019-12-31'), 'abc'),
-  ]) ;
+  private _places = new BehaviorSubject<Place[]>([]) ;
 
   get places() {
     return this._places.asObservable();
@@ -30,6 +40,36 @@ export class PlacesService {
     return this.places.pipe(take(1), map(places => {
       return {...places.find(p => p.id === id)};
     }));
+  }
+
+  fetchPlaces() {
+    return this.http
+        .get<{ [key: string]: PlaceData }>(this.API_URL + '/offered-places.json')
+        .pipe(
+            map(resData => {
+              const places = [];
+              for (const key in resData) {
+                if (resData.hasOwnProperty(key)) {
+                  places.push(
+                      new Place(
+                          key,
+                          resData[key].title,
+                          resData[key].description,
+                          resData[key].imageUrl,
+                          resData[key].price,
+                          new Date(resData[key].availableFrom),
+                          new Date(resData[key].availableTo),
+                          resData[key].userId)
+                  );
+                }
+              }
+
+              return places;
+            }),
+            tap(places => {
+              this._places.next(places);
+            })
+        );
   }
 
   addPlace(title: string, description: string, price: number, dateFrom: Date, dateTo: Date) {
