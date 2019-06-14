@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {Booking} from './booking.model';
 import {BehaviorSubject} from 'rxjs';
 import {AuthService} from '../auth/auth.service';
-import {delay, map, switchMap, take, tap} from 'rxjs/operators';
+import {map, switchMap, take, tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 
@@ -69,12 +69,15 @@ export class BookingService {
   }
 
   cancelBooking(bookingId: string) {
-    return this.bookings.pipe(
-        take(1),
-        delay(1000),
-        tap(bookings => {
-          this._bookings.next(bookings.filter(b => b.id !== bookingId));
-        }));
+    return this.http
+        .delete(`${this.API_URL}/bookings/${bookingId}.json`)
+        .pipe(
+            switchMap(() => this.bookings),
+            take(1),
+            tap(bookings => {
+              this._bookings.next(bookings.filter(b => b.id !== bookingId));
+            })
+        );
   }
 
   fetchBookings() {
