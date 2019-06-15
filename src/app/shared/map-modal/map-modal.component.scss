@@ -5,8 +5,8 @@
   background-color: transparent;
   opacity: 0;
   transition: opacity 150ms ease-in;
+}
 
-  .visible {
-    opacity: 1;
-  }
+.map.visible {
+  opacity: 1;
 }

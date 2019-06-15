@@ -10,6 +10,4 @@ import {IonicModule} from '@ionic/angular';
   exports: [LocationPickerComponent, MapModalComponent],
   entryComponents: [MapModalComponent]
 })
-export class SharedModule {
-  
-}
+export class SharedModule {}
