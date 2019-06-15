@@ -5,6 +5,7 @@ import {BehaviorSubject, of} from 'rxjs';
 import {map, switchMap, take, tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
+import {PlaceLocation} from './location.model';
 
 interface PlaceData {
   availableFrom: string;
@@ -14,6 +15,7 @@ interface PlaceData {
   price: number;
   title: string;
   userId: string;
+  location: PlaceLocation;
 }
 
 /*new Place('p1', 'Manhattan Mansion', 'In the heart of New York City.', 'https://imgs.6sqft.com/wp-content/uploads/2014/06/21042533/Carnegie-Mansion-nyc.jpg', 149.99, new Date('2019-01-01'), new Date('2019-12-31'), 'xyz'),
@@ -49,7 +51,8 @@ export class PlacesService {
                   placeData.price,
                   new Date(placeData.availableFrom),
                   new Date(placeData.availableTo),
-                  placeData.userId
+                  placeData.userId,
+                  placeData.location
               );
             })
         );
@@ -72,8 +75,9 @@ export class PlacesService {
                           resData[key].price,
                           new Date(resData[key].availableFrom),
                           new Date(resData[key].availableTo),
-                          resData[key].userId)
-                  );
+                          resData[key].userId,
+                          resData[key].location
+                  ));
                 }
               }
 
@@ -85,7 +89,7 @@ export class PlacesService {
         );
   }
 
-  addPlace(title: string, description: string, price: number, dateFrom: Date, dateTo: Date) {
+  addPlace(title: string, description: string, price: number, dateFrom: Date, dateTo: Date, location: PlaceLocation) {
     let generatedId: string;
     const newPlace = new Place(
         Math.random().toString(),
@@ -95,7 +99,8 @@ export class PlacesService {
         price,
         dateFrom,
         dateTo,
-        this.authService.userId);
+        this.authService.userId,
+        location);
 
     return this.http
         .post<{name: string}>(this.API_URL + '/offered-places.json', { ...newPlace, id: null })
@@ -135,7 +140,8 @@ export class PlacesService {
               oldPlace.price,
               oldPlace.availableFrom,
               oldPlace.availableTo,
-              oldPlace.userId
+              oldPlace.userId,
+              oldPlace.location
           );
 
           return this.http.put(`${this.API_URL}/offered-places/${placeId}.json`,
