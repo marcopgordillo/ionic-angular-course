@@ -75,6 +75,6 @@ export class NewOfferPage implements OnInit {
   }
 
   onImagePicked(imageData: string) {
-    
+    console.log('Image picked', imageData);
   }
 }
