@@ -1,21 +1,34 @@
-import { Component } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 
-import { Platform } from '@ionic/angular';
-import { Plugins, Capacitor } from '@capacitor/core';
-import { AuthService } from './auth/auth.service';
-import { Router } from '@angular/router';
+import {Platform} from '@ionic/angular';
+import {Capacitor, Plugins} from '@capacitor/core';
+import {AuthService} from './auth/auth.service';
+import {Router} from '@angular/router';
+import {Subscription} from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html'
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
+  private authSub: Subscription;
+  private prevAuthState = false;
+
   constructor(
     private platform: Platform,
     private authService: AuthService,
     private router: Router
   ) {
     this.initializeApp();
+  }
+
+  ngOnInit(): void {
+    this.authSub = this.authService.userIsAuthenticated.subscribe(isAuth => {
+      if (!isAuth && this.prevAuthState !== isAuth) {
+        this.router.navigateByUrl('/auth');
+      }
+      this.prevAuthState = isAuth;
+    });
   }
 
   initializeApp() {
@@ -28,6 +41,13 @@ export class AppComponent {
 
   onLogout() {
     this.authService.logout();
-    this.router.navigateByUrl('/auth');
   }
+
+  ngOnDestroy(): void {
+    if (this.authSub) {
+      this.authSub.unsubscribe();
+    }
+  }
+
+
 }

@@ -66,6 +66,7 @@ export class AuthService {
 
   logout() {
     this._user.next(null);
+    Plugins.Storage.remove({key: 'authData'});
   }
 
   signup(email: string, password: string) {
@@ -97,9 +98,9 @@ export class AuthService {
               }
             }),
             map(user => {
-              return !!user;
+              return !!user; // convert to observable
             })
-        ); // convert to observable
+        );
   }
 
   private setUserData(userData: AuthResponseData) {

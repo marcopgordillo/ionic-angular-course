@@ -30,8 +30,6 @@ export class AuthPage implements OnInit {
 
       let authObs: Observable<AuthResponseData>;
 
-      console.log('isLogin', this.isLogin);
-
       if (this.isLogin) {
         authObs = this.authService.login(email, password);
       } else {
@@ -74,6 +72,7 @@ export class AuthPage implements OnInit {
     const password = form.value.password;
 
     this.authenticate(email, password);
+    form.reset();
   }
 
   onSwitchAuthMode() {
