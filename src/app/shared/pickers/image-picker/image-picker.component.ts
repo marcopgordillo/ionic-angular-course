@@ -15,7 +15,7 @@ export class ImagePickerComponent implements OnInit {
   filePickerRef: ElementRef<HTMLInputElement>;
 
   @Output()
-  imagePick = new EventEmitter<string>();
+  imagePick = new EventEmitter<string | File>();
 
   constructor(private platform: Platform) { }
 
@@ -25,7 +25,7 @@ export class ImagePickerComponent implements OnInit {
     console.log('iOS: ', this.platform.is('ios'));
     console.log('Android: ', this.platform.is('android'));
     console.log('Desktop: ', this.platform.is('desktop'));
-    
+
     if ((this.platform.is('mobile') && !this.platform.is('hybrid')) || this.platform.is('desktop')) {
       this.usePicker = true;
     }
@@ -63,6 +63,7 @@ export class ImagePickerComponent implements OnInit {
     fr.onload = () => {
       const dataUrl = fr.result.toString();
       this.selectedImage = dataUrl;
+      this.imagePick.emit(pickedFile);
     };
     fr.readAsDataURL(pickedFile);
   }
