@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {Injectable, OnDestroy} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {environment} from '../../environments/environment';
 import {BehaviorSubject, from} from 'rxjs';
@@ -19,11 +19,12 @@ export interface AuthResponseData {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
+export class AuthService implements OnDestroy {
 
   private FB_AUTH_URL = environment.fbAuthUrl;
 
   private _user = new BehaviorSubject<User>(null);
+  private activeLogoutTimer: any;
 
   get userIsAuthenticated() {
     return this._user
@@ -65,6 +66,9 @@ export class AuthService {
   }
 
   logout() {
+    if (this.activeLogoutTimer) {
+      clearTimeout(this.activeLogoutTimer);
+    }
     this._user.next(null);
     Plugins.Storage.remove({key: 'authData'});
   }
@@ -85,7 +89,12 @@ export class AuthService {
               if (!storedData || !storedData.value) {
                 return null;
               }
-              const parsedData = JSON.parse(storedData.value) as {token: string, tokenExpirationDate: string, userId: string, email: string};
+              const parsedData = JSON.parse(storedData.value) as {
+                token: string,
+                tokenExpirationDate: string,
+                userId: string,
+                email: string
+              };
               const expirationTime = new Date(parsedData.tokenExpirationDate);
               if (expirationTime <= new Date()) {
                 return null;
@@ -95,6 +104,7 @@ export class AuthService {
             tap(user => {
               if (user) {
                 this._user.next(user);
+                this.autoLogout(user.tokenDuration);
               }
             }),
             map(user => {
@@ -103,14 +113,32 @@ export class AuthService {
         );
   }
 
+  ngOnDestroy(): void {
+    if (this.activeLogoutTimer) {
+      clearTimeout(this.activeLogoutTimer);
+    }
+  }
+
   private setUserData(userData: AuthResponseData) {
     const expirationTime = new Date(new Date().getTime() + (+userData.expiresIn * 1000));
-    this._user.next(new User(userData.localId, userData.email, userData.idToken, expirationTime ));
+    const user = new User(userData.localId, userData.email, userData.idToken, expirationTime);
+    this._user.next(user);
+    this.autoLogout(user.tokenDuration);
     this.storageAuthData(userData.localId, userData.idToken, expirationTime.toISOString(), userData.email);
   }
 
   private storageAuthData(userId: string, token: string, tokenExpirationDate: string, email: string) {
     const data = JSON.stringify({userId, token, tokenExpirationDate, email});
     Plugins.Storage.set({ key: 'authData', value: data });
+  }
+
+  private autoLogout(duration: number) {
+    if (this.activeLogoutTimer) {
+      clearTimeout(this.activeLogoutTimer);
+    }
+
+    this.activeLogoutTimer = setTimeout(() => {
+      this.logout();
+    }, duration);
   }
 }

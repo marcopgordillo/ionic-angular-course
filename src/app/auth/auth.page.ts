@@ -37,11 +37,11 @@ export class AuthPage implements OnInit {
       }
 
       authObs.subscribe(resData => {
-        console.log(resData);
         this.isLoading = false;
         loadingEl.dismiss();
         this.router.navigateByUrl('/places/tabs/discover');
       }, errRes => {
+        this.isLoading = false;
         loadingEl.dismiss();
         const code = errRes.error.error.message;
         let message: string;
