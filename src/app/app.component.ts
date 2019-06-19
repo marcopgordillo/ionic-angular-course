@@ -1,10 +1,11 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 
 import {Platform} from '@ionic/angular';
-import {Capacitor, Plugins} from '@capacitor/core';
+import {AppState, Capacitor, PluginListenerHandle, Plugins} from '@capacitor/core';
 import {AuthService} from './auth/auth.service';
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
+import {take} from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +14,7 @@ import {Subscription} from 'rxjs';
 export class AppComponent implements OnInit, OnDestroy {
   private authSub: Subscription;
   private prevAuthState = false;
+  private appStateListener: PluginListenerHandle;
 
   constructor(
     private platform: Platform,
@@ -29,6 +31,7 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       this.prevAuthState = isAuth;
     });
+    this.appStateListener = Plugins.App.addListener('appStateChange', this.checkAuthOnResume.bind(this));
   }
 
   initializeApp() {
@@ -47,7 +50,19 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.authSub) {
       this.authSub.unsubscribe();
     }
+    this.appStateListener.remove();
   }
 
-
+  private checkAuthOnResume(state: AppState) {
+    if (state.isActive) {
+      this.authService
+          .autoLogin()
+          .pipe(take(1))
+          .subscribe(success => {
+            if (!success) {
+              this.onLogout();
+            }
+          });
+    }
+  }
 }
