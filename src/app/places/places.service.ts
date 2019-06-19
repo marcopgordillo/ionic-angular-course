@@ -28,6 +28,7 @@ interface PlaceData {
 export class PlacesService {
 
   private API_URL: string = environment.apiUrl;
+  private STORAGE_URL: string = environment.storageUrl;
 
   private _places = new BehaviorSubject<Place[]>([]) ;
 
@@ -89,13 +90,20 @@ export class PlacesService {
         );
   }
 
-  addPlace(title: string, description: string, price: number, dateFrom: Date, dateTo: Date, location: PlaceLocation) {
+  addPlace(title: string,
+           description: string,
+           price: number,
+           dateFrom: Date,
+           dateTo: Date,
+           location: PlaceLocation,
+           imageUrl: string
+  ) {
     let generatedId: string;
     const newPlace = new Place(
         Math.random().toString(),
         title,
         description,
-        'https://imgs.6sqft.com/wp-content/uploads/2014/06/21042533/Carnegie-Mansion-nyc.jpg',
+        imageUrl,
         price,
         dateFrom,
         dateTo,
@@ -151,5 +159,12 @@ export class PlacesService {
           this._places.next(updatedPlaces);
         })
     );
+  }
+
+  uploadImage(image: File) {
+    const uploadData = new FormData();
+    uploadData.append('image', image);
+
+    return this.http.post<{imageUrl: string, imagePath: string}>(this.STORAGE_URL, uploadData);
   }
 }
