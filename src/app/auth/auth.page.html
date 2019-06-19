@@ -33,7 +33,7 @@
             Switch to {{ isLogin ? 'Signup' : 'Login' }}
           </ion-button>
           <ion-button type="submit" color="primary" expand="block" *ngIf="!isLoading" [disabled]="!f.valid">
-            Login
+            {{ isLogin ? 'Login' : 'Signup' }}
           </ion-button>
         </ion-col>
       </ion-row>
