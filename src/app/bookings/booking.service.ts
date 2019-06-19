@@ -43,6 +43,7 @@ export class BookingService {
 
     let generatedId: string;
     let newBooking: Booking;
+    let fetchedUserId: string;
 
     return this.authService.userId
         .pipe(
@@ -51,10 +52,16 @@ export class BookingService {
               if (!userId) {
                 throw new Error('No user id found!');
               }
+              fetchedUserId = userId;
+
+              return this.authService.token;
+            }),
+            take(1),
+            switchMap(token => {
               newBooking = new Booking(
                   Math.random().toString(),
                   placeId,
-                  userId,
+                  fetchedUserId,
                   placeTitle,
                   placeImage,
                   firstName,
@@ -64,8 +71,9 @@ export class BookingService {
                   dateTo);
 
               return this.http
-                  .post<{name: string}>(`${this.API_URL}/bookings.json`, {...newBooking, id: null});
+                  .post<{name: string}>(`${this.API_URL}/bookings.json?auth=${token}`, {...newBooking, id: null});
             }),
+            take(1),
             switchMap(resData => {
               generatedId = resData.name;
               return this.bookings;
@@ -79,9 +87,13 @@ export class BookingService {
   }
 
   cancelBooking(bookingId: string) {
-    return this.http
-        .delete(`${this.API_URL}/bookings/${bookingId}.json`)
+    return this.authService.token
         .pipe(
+            take(1),
+            switchMap(token => {
+              return this.http
+                  .delete(`${this.API_URL}/bookings/${bookingId}.json?auth=${token}`);
+            }),
             switchMap(() => this.bookings),
             take(1),
             tap(bookings => {
@@ -91,6 +103,7 @@ export class BookingService {
   }
 
   fetchBookings() {
+    let fetchedUserId: string;
     return this.authService.userId
         .pipe(
             take(1),
@@ -98,9 +111,13 @@ export class BookingService {
               if (!userId) {
                 throw new Error('User not found!');
               }
-              return this.http
-                  .get<{ [key: string]: BookingData }>(`${this.API_URL}/bookings.json?orderBy="userId"&equalTo="${userId}"`)
+              fetchedUserId = userId;
+              return this.authService.token;
             }),
+            take(1),
+            switchMap(token => this.http
+                  .get<{ [key: string]: BookingData }>(`${this.API_URL}/bookings.json?orderBy="userId"&equalTo="${fetchedUserId}"&auth=${token}`)
+            ),
             map(bookingData => {
               const bookings = [];
               for (const key in bookingData) {
