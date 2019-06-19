@@ -85,7 +85,7 @@ export class AuthPage implements OnInit {
         .create(
             {
               header: 'Authentication failed',
-              message: message,
+              message,
               buttons: ['Okay']
             })
         .then(alertEl => alertEl.present());
