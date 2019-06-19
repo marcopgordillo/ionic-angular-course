@@ -40,22 +40,40 @@ export class BookingService {
       dateFrom: Date,
       dateTo: Date
   ) {
-    let generatedId: string;
-    const newBooking = new Booking(
-        Math.random().toString(),
-        placeId,
-        this.authService.userId,
-        placeTitle,
-        placeImage,
-        firstName,
-        lastName,
-        guestNumber,
-        dateFrom,
-        dateTo);
 
-    return this.http
-        .post<{name: string}>(`${this.API_URL}/bookings.json`, {...newBooking, id: null})
+    let generatedId: string;
+    let newBooking: Booking;
+    let fetchedUserId: string;
+
+    return this.authService.userId
         .pipe(
+            take(1),
+            switchMap(userId => {
+              if (!userId) {
+                throw new Error('No user id found!');
+              }
+              fetchedUserId = userId;
+
+              return this.authService.token;
+            }),
+            take(1),
+            switchMap(token => {
+              newBooking = new Booking(
+                  Math.random().toString(),
+                  placeId,
+                  fetchedUserId,
+                  placeTitle,
+                  placeImage,
+                  firstName,
+                  lastName,
+                  guestNumber,
+                  dateFrom,
+                  dateTo);
+
+              return this.http
+                  .post<{name: string}>(`${this.API_URL}/bookings.json?auth=${token}`, {...newBooking, id: null});
+            }),
+            take(1),
             switchMap(resData => {
               generatedId = resData.name;
               return this.bookings;
@@ -69,9 +87,13 @@ export class BookingService {
   }
 
   cancelBooking(bookingId: string) {
-    return this.http
-        .delete(`${this.API_URL}/bookings/${bookingId}.json`)
+    return this.authService.token
         .pipe(
+            take(1),
+            switchMap(token => {
+              return this.http
+                  .delete(`${this.API_URL}/bookings/${bookingId}.json?auth=${token}`);
+            }),
             switchMap(() => this.bookings),
             take(1),
             tap(bookings => {
@@ -81,33 +103,44 @@ export class BookingService {
   }
 
   fetchBookings() {
-    return this.http
-        .get<{ [key: string]: BookingData }>(`${this.API_URL}/bookings.json?orderBy="userId"&equalTo="${this.authService.userId}"`)
+    let fetchedUserId: string;
+    return this.authService.userId
         .pipe(
-          map(bookingData => {
-            const bookings = [];
-            for (const key in bookingData) {
-              if (bookingData.hasOwnProperty(key)) {
-                bookings.push(new Booking(
-                    key,
-                    bookingData[key].placeId,
-                    bookingData[key].userId,
-                    bookingData[key].placeTitle,
-                    bookingData[key].placeImage,
-                    bookingData[key].firstName,
-                    bookingData[key].lastName,
-                    bookingData[key].guestNumber,
-                    new Date(bookingData[key].bookedFrom),
-                    new Date(bookingData[key].bookedTo)
-                ));
+            take(1),
+            switchMap(userId => {
+              if (!userId) {
+                throw new Error('User not found!');
               }
-            }
-
-            return bookings;
-          }),
-          tap(bookings => {
-            this._bookings.next(bookings);
-          })
+              fetchedUserId = userId;
+              return this.authService.token;
+            }),
+            take(1),
+            switchMap(token => this.http
+                  .get<{ [key: string]: BookingData }>(`${this.API_URL}/bookings.json?orderBy="userId"&equalTo="${fetchedUserId}"&auth=${token}`)
+            ),
+            map(bookingData => {
+              const bookings = [];
+              for (const key in bookingData) {
+                if (bookingData.hasOwnProperty(key)) {
+                  bookings.push(new Booking(
+                      key,
+                      bookingData[key].placeId,
+                      bookingData[key].userId,
+                      bookingData[key].placeTitle,
+                      bookingData[key].placeImage,
+                      bookingData[key].firstName,
+                      bookingData[key].lastName,
+                      bookingData[key].guestNumber,
+                      new Date(bookingData[key].bookedFrom),
+                      new Date(bookingData[key].bookedTo)
+                  ));
+                }
+              }
+              return bookings;
+            }),
+            tap(bookings => {
+              this._bookings.next(bookings);
+            })
         );
   }
 }
