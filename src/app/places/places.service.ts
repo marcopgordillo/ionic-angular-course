@@ -18,10 +18,6 @@ interface PlaceData {
   location: PlaceLocation;
 }
 
-/*new Place('p1', 'Manhattan Mansion', 'In the heart of New York City.', 'https://imgs.6sqft.com/wp-content/uploads/2014/06/21042533/Carnegie-Mansion-nyc.jpg', 149.99, new Date('2019-01-01'), new Date('2019-12-31'), 'xyz'),
-    new Place('p2', 'Amour Toujours', 'Romantic place in Paris.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/LuxembourgMontparnasse.JPG/1024px-LuxembourgMontparnasse.JPG', 189.99, new Date('2019-01-01'), new Date('2019-12-31'), 'abc'),
-    new Place('p3', 'The Foggy Palace', 'Not your average city trip!', 'http://traveljapanblog.com/ashland/wp-content/uploads/2012/11/12N_1035-RAW-palace-of-the-fine-arts-san-francisco-night1.jpg', 99.99, new Date('2019-01-01'), new Date('2019-12-31'), 'abc')*/
-
 @Injectable({
   providedIn: 'root'
 })
@@ -99,20 +95,28 @@ export class PlacesService {
            imageUrl: string
   ) {
     let generatedId: string;
-    const newPlace = new Place(
-        Math.random().toString(),
-        title,
-        description,
-        imageUrl,
-        price,
-        dateFrom,
-        dateTo,
-        this.authService.userId,
-        location);
-
-    return this.http
-        .post<{name: string}>(this.API_URL + '/offered-places.json', { ...newPlace, id: null })
+    let newPlace: Place;
+    return this.authService.userId
         .pipe(
+            take(1),
+            switchMap(userId => {
+              if (!userId) {
+                throw new Error('No user found!');
+              }
+              newPlace = new Place(
+                  Math.random().toString(),
+                  title,
+                  description,
+                  imageUrl,
+                  price,
+                  dateFrom,
+                  dateTo,
+                  userId,
+                  location);
+
+              return this.http
+                  .post<{name: string}>(this.API_URL + '/offered-places.json', { ...newPlace, id: null });
+            }),
             switchMap(resData => {
               generatedId = resData.name;
               return this.places;
