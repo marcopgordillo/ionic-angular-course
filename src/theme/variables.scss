@@ -74,4 +74,23 @@
   --ion-color-light-contrast-rgb: 0, 0, 0;
   --ion-color-light-shade: #d7d8da;
   --ion-color-light-tint: #f5f6f9;
+
+  /** toolbar **/
+  --ion-toolbar-background: var(--ion-color-danger, black);
+  --ion-toolbar-color: var(--ion-color-primary-contrast);
+
+  /** CSS bug IOS **/
+  ion-toolbar {
+    ion-button,
+    ion-back-button,
+    ion-menu-button,
+    .sc-ion-back-button-ios-h {
+      --color: white;
+    }
+  }
+}
+
+ion-button {
+  //--background: blue;
+  //--box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.6);
 }
